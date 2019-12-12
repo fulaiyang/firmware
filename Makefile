@@ -4,7 +4,7 @@ VERSION := 0.0.0
 RELEASE := 000
 
 FIRMWARE_ROOT = ${CURDIR}
-BUILD_DIR = ${FIRMWARE_ROOT}/build_dir/
+BUILD_DIR = ${FIRMWARE_ROOT}/build_dir
 ROOTFS = ${FIRMWARE_ROOT}/rootfs
 EDK_DIR = ${FIRMWARE_ROOT}/edk2
 SEABIOS_DIR = ${FIRMWARE_ROOT}/seabios-1.10.2
@@ -17,11 +17,10 @@ all: seabios ovmf
 seabios:
 	@mkdir -p ${BUILD_DIR}
 	$(MAKE) EXTRAVERSION="-${NAME}-${VERSION}-${RELEASE}" \
-            OUT="${BUILD_DIR}" -C $(SEABIOS_DIR)
+            OUT="${BUILD_DIR}/" -C $(SEABIOS_DIR)
 
-ovmf:
-	cd $(EDK_DIR) && make -j1 && \
-        cp ${EDK_DIR}/Build/*/*/FV/OVMF* ${BUILD_DIR}
+ovmf: 
+	cd $(EDK_DIR) && make -j1
 
 install:
 	mkdir -p ${DESTDIR}
