@@ -1,3 +1,4 @@
+SHELL=/bin/bash
 BUILDTARGET = RELEASE
 NAME := edk_ovmf
 VERSION := 0.0.0
@@ -26,5 +27,6 @@ ovmf: edk_basetool
 clean:
 	-cd ${EDK_DIR}/BaseTools && $(MAKE) clean -f GNUmakefile
 	@rm -rf ${EDK_DIR}/Build
-    
+	cd ${EDK_DIR}/Conf && rm -rf `ls | grep -v "ReadMe.txt"` .cache
+ 
 .PHONY: all clean ovmf edk_basetool
