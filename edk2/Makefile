@@ -1,3 +1,4 @@
+BUILDTARGET = RELEASE
 NAME := edk_ovmf
 VERSION := 0.0.0
 RELEASE := 000
@@ -21,7 +22,7 @@ ovmf: edk_basetool
        -D FD_SIZE_2MB \
        -D DEBUG_ON_SERIAL_PORT \
        -n $(JOBS) \
-       -b RELEASE
+       -b $(BUILDTARGET)
 clean:
 	-cd ${EDK_DIR}/BaseTools && $(MAKE) clean -f GNUmakefile
 	@rm -rf ${EDK_DIR}/Build
