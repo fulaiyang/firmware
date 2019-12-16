@@ -10,8 +10,7 @@ ROOTFS = ${FIRMWARE_ROOT}/rootfs
 EDK_DIR = ${FIRMWARE_ROOT}/edk2
 SEABIOS_DIR = ${FIRMWARE_ROOT}/seabios-1.10.2
 
-#all: seabios ovmf
-all: 
+all: seabios ovmf
 	@mkdir -p ${ROOTFS}/usr/share/qemu-kvm/
 	cp ${BUILD_DIR}/bios.bin ${ROOTFS}/usr/share/qemu-kvm/seabios.bin
 	cp ${EDK_DIR}/Build/*/$(BUILDTARGET)_*/FV/OVMF* ${ROOTFS}/usr/share/qemu-kvm/
