@@ -27,6 +27,6 @@ ovmf: edk_basetool
 clean:
 	-cd ${EDK_DIR}/BaseTools && $(MAKE) clean -f GNUmakefile
 	@rm -rf ${EDK_DIR}/Build
-	cd ${EDK_DIR}/Conf && rm -rf `ls | grep -v "ReadMe.txt"` .cache
+	cd ${EDK_DIR}/Conf && rm -rf `ls | grep -v "ReadMe.txt"` .cache .AutoGenIdFile.txt
  
 .PHONY: all clean ovmf edk_basetool
