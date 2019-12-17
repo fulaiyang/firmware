@@ -101,13 +101,43 @@ Q35TsegMbytesInitialization (
 }
 
 
+STATIC
+UINT64
+GetSystemMemorySizeAbove4gb (
+  VOID
+  )
+{
+  UINT32 Size;
+  UINTN  CmosIndex;
+
+  //
+  // CMOS 0x5b-0x5d specifies the system memory above 4GB MB.
+  // * CMOS(0x5d) is the most significant size byte
+  // * CMOS(0x5c) is the middle size byte
+  // * CMOS(0x5b) is the least significant size byte
+  // * The size is specified in 64kb chunks
+  //
+
+  Size = 0;
+  for (CmosIndex = 0x5d; CmosIndex >= 0x5b; CmosIndex--) {
+    Size = (UINT32) (Size << 8) + (UINT32) CmosRead8 (CmosIndex);
+  }
+
+  return LShiftU64 (Size, 16);
+}
+
+
 VOID
 QemuUc32BaseInitialization (
   VOID
   )
 {
   UINT32 LowerMemorySize;
-  UINT32 Uc32Size;
+  UINT64 AboveMemorySize;
+  UINT64 max_ram_below_4g;
+  EFI_STATUS           Status;
+  FIRMWARE_CONFIG_ITEM FwCfgItem;
+  UINTN                FwCfgSize;
 
   if (mXen) {
     return;
@@ -131,10 +161,34 @@ QemuUc32BaseInitialization (
   // On i440fx, start with the [LowerMemorySize, 4GB) range. Make sure one
   // variable MTRR suffices by truncating the size to a whole power of two,
   // while keeping the end affixed to 4GB. This will round the base up.
-  //
+  // 
   LowerMemorySize = GetSystemMemorySizeBelow4gb ();
-  Uc32Size = GetPowerOfTwo32 ((UINT32)(SIZE_4GB - LowerMemorySize));
-  mQemuUc32Base = (UINT32)(SIZE_4GB - Uc32Size);
+  AboveMemorySize = GetSystemMemorySizeAbove4gb ();
+  //Uc32Size = GetPowerOfTwo32 ((UINT32)(SIZE_4GB - LowerMemorySize));
+  //mQemuUc32Base = (UINT32)(SIZE_4GB - Uc32Size);
+  mQemuUc32Base = (UINT32)LowerMemorySize;
+  
+  if (AboveMemorySize == 0) {
+      Status = QemuFwCfgFindFile ("etc/max-ram-below-4g", &FwCfgItem, &FwCfgSize);
+      
+      if(Status == RETURN_SUCCESS) {
+          QemuFwCfgSelectItem (FwCfgItem);
+          max_ram_below_4g = (UINT64) QemuFwCfgRead64();
+      }
+      if (max_ram_below_4g) {
+          DEBUG ((EFI_D_INFO,"%a: max_ram_below_4g from qemu fw_cfg is 0x%llx\n",
+                        __FUNCTION__, max_ram_below_4g));
+          mQemuUc32Base = max_ram_below_4g;
+      } else {
+          DEBUG ((EFI_D_WARN,"%a: max_ram_below_4g from qemu fw_cfg failed\n",
+                                  __FUNCTION__));
+      }
+  }
+
+  if (mQemuUc32Base <= 0x80000000)
+      mQemuUc32Base = 0x80000000;
+  else if (mQemuUc32Base <= 0xc0000000)
+      mQemuUc32Base = 0xc0000000;  
   //
   // Assuming that LowerMemorySize is at least 1 byte, Uc32Size is at most 2GB.
   // Therefore mQemuUc32Base is at least 2GB.
@@ -142,9 +196,8 @@ QemuUc32BaseInitialization (
   ASSERT (mQemuUc32Base >= BASE_2GB);
 
   if (mQemuUc32Base != LowerMemorySize) {
-    DEBUG ((DEBUG_VERBOSE, "%a: rounded UC32 base from 0x%x up to 0x%x, for "
-      "an UC32 size of 0x%x\n", __FUNCTION__, LowerMemorySize, mQemuUc32Base,
-      Uc32Size));
+    DEBUG ((DEBUG_VERBOSE, "%a: rounded UC32 base from 0x%x up to 0x%x\n",
+                             __FUNCTION__, LowerMemorySize, mQemuUc32Base));
   }
 }
 
@@ -273,31 +326,6 @@ GetSystemMemorySizeBelow4gb (
   Cmos0x35 = (UINT8) CmosRead8 (0x35);
 
   return (UINT32) (((UINTN)((Cmos0x35 << 8) + Cmos0x34) << 16) + SIZE_16MB);
-}
-
-
-STATIC
-UINT64
-GetSystemMemorySizeAbove4gb (
-  )
-{
-  UINT32 Size;
-  UINTN  CmosIndex;
-
-  //
-  // CMOS 0x5b-0x5d specifies the system memory above 4GB MB.
-  // * CMOS(0x5d) is the most significant size byte
-  // * CMOS(0x5c) is the middle size byte
-  // * CMOS(0x5b) is the least significant size byte
-  // * The size is specified in 64kb chunks
-  //
-
-  Size = 0;
-  for (CmosIndex = 0x5d; CmosIndex >= 0x5b; CmosIndex--) {
-    Size = (UINT32) (Size << 8) + (UINT32) CmosRead8 (CmosIndex);
-  }
-
-  return LShiftU64 (Size, 16);
 }
 
 
