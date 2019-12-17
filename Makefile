@@ -14,10 +14,6 @@ all: seabios ovmf
 	@mkdir -p ${ROOTFS}/usr/share/qemu-kvm/
 	cp ${BUILD_DIR}/bios.bin ${ROOTFS}/usr/share/qemu-kvm/seabios.bin
 	cp ${EDK_DIR}/Build/*/$(BUILDTARGET)_*/FV/OVMF* ${ROOTFS}/usr/share/qemu-kvm/
-ifeq ($(BUILDTARGET),DEBUG)
-	cp -rf ${EDK_DIR}/Build ${FIRMWARE_ROOT}/debug/
-	rm -rf ${FIRMWARE_ROOT}/debug/Build/*/RELEASE_*
-endif
 
 seabios:
 	@mkdir -p ${BUILD_DIR}
@@ -26,6 +22,10 @@ seabios:
 
 ovmf: 
 	cd $(EDK_DIR) && make -j1 BUILDTARGET=$(BUILDTARGET)
+ifeq ($(BUILDTARGET),DEBUG)
+	cp -rf ${EDK_DIR}/Build ${FIRMWARE_ROOT}/debug/
+	rm -rf ${FIRMWARE_ROOT}/debug/Build/*/RELEASE_*
+endif
 
 install:
 	mkdir -p ${DESTDIR}
