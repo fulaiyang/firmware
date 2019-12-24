@@ -33,7 +33,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -71,4 +71,5 @@
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdMaximumDevicePathNodeCount    ## SOMETIMES_CONSUMES
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm
 

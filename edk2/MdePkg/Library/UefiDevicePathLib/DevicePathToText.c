@@ -2127,10 +2127,10 @@ DevPathToTextBBS (
   )
 {
   BBS_BBS_DEVICE_PATH *Bbs;
-  CHAR16              *Type;
+//  CHAR16              *Type;
 
   Bbs = DevPath;
-  switch (Bbs->DeviceType) {
+/*  switch (Bbs->DeviceType) {
   case BBS_TYPE_FLOPPY:
     Type = L"Floppy";
     break;
@@ -2172,6 +2172,22 @@ DevPathToTextBBS (
   }
 
   UefiDevicePathLibCatPrint (Str, L",0x%x)", Bbs->StatusFlag);
+*/
+//
+//ide has the 4 index Primary or Secondary;Master or Slave
+//
+ if (!AsciiStrnCmp(Bbs->String, "Primary Master", AsciiStrLen("Primary Master"))) {
+    UefiDevicePathLibCatPrint (Str, L"BBS(Primary Master)");
+ } else if (!AsciiStrnCmp(Bbs->String,"Primary Slave", AsciiStrLen("Primary Slave"))) {
+    UefiDevicePathLibCatPrint (Str, L"BBS(Primary Slave)");
+ } else if (!AsciiStrnCmp(Bbs->String,"Secondary Master", AsciiStrLen("Secondary Master"))) {
+    UefiDevicePathLibCatPrint (Str, L"BBS(Secondary Master)");
+ } else if (!AsciiStrnCmp(Bbs->String,"Secondary Slave", AsciiStrLen("Secondary Slave"))) {
+    UefiDevicePathLibCatPrint (Str, L"BBS(Secondary Slave)");
+ } else {
+//virtio blk
+    UefiDevicePathLibCatPrint (Str, L"BBS(%a)", Bbs->String);
+ }
 }
 
 /**

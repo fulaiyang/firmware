@@ -1238,6 +1238,223 @@ TranslateMmioOfwNodes (
   return RETURN_BUFFER_TOO_SMALL;
 }
 
+STATIC
+RETURN_STATUS
+TranslatePciOfwNodesLegacy (
+  IN      CONST OFW_NODE           *OfwNode,
+  IN      UINTN                    NumNodes,
+  IN      CONST EXTRA_ROOT_BUS_MAP *ExtraPciRoots,
+  OUT     CHAR16                   *Translated,
+  IN OUT  UINTN                    *TranslatedSize
+  )
+{
+  UINT32 PciRoot;
+  CHAR8  *Comma;
+  UINTN  FirstNonBridge;
+  CHAR16 Bridges[BRIDGE_TRANSLATION_OUTPUT_SIZE];
+  UINTN  BridgesLen;
+  UINT64 PciDevFun[2];
+  UINTN  NumEntries;
+  UINTN  Written;
+
+  //
+  // Resolve the PCI root bus number.
+  //
+  // The initial OFW node for the main root bus (ie. bus number 0) is:
+  //
+  //   /pci@i0cf8
+  //
+  // For extra root buses, the initial OFW node is
+  //
+  //   /pci@i0cf8,4
+  //              ^
+  //              root bus serial number (not PCI bus number)
+  //
+  if (NumNodes < REQUIRED_PCI_OFW_NODES ||
+      !SubstringEq (OfwNode[0].DriverName, "pci")
+      ) {
+    return RETURN_UNSUPPORTED;
+  }
+
+  PciRoot = 0;
+  Comma = ScanMem8 (OfwNode[0].UnitAddress.Ptr, OfwNode[0].UnitAddress.Len,
+            ',');
+  if (Comma != NULL) {
+    SUBSTRING PciRootSerialSubString;
+    UINT64    PciRootSerial;
+
+    //
+    // Parse the root bus serial number from the unit address after the comma.
+    //
+    PciRootSerialSubString.Ptr = Comma + 1;
+    PciRootSerialSubString.Len = OfwNode[0].UnitAddress.Len -
+                                 (PciRootSerialSubString.Ptr -
+                                  OfwNode[0].UnitAddress.Ptr);
+    NumEntries = 1;
+    if (RETURN_ERROR (ParseUnitAddressHexList (PciRootSerialSubString,
+                      &PciRootSerial, &NumEntries))) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    //
+    // Map the extra root bus's serial number to its actual bus number.
+    //
+    if (EFI_ERROR (MapRootBusPosToBusNr (ExtraPciRoots, PciRootSerial,
+                     &PciRoot))) {
+      return RETURN_PROTOCOL_ERROR;
+    }
+  }
+
+  //
+  // Translate a sequence of PCI bridges. For each bridge, the OFW node is:
+  //
+  //   pci-bridge@1e[,0]
+  //              ^   ^
+  //              PCI slot & function on the parent, holding the bridge
+  //
+  // and the UEFI device path node is:
+  //
+  //   Pci(0x1E,0x0)
+  //
+  FirstNonBridge = 1;
+  Bridges[0] = L'\0';
+  BridgesLen = 0;
+  do {
+    UINT64 BridgeDevFun[2];
+    UINTN  BridgesFreeBytes;
+
+    if (!SubstringEq (OfwNode[FirstNonBridge].DriverName, "pci-bridge")) {
+      break;
+    }
+
+    BridgeDevFun[1] = 0;
+    NumEntries = sizeof BridgeDevFun / sizeof BridgeDevFun[0];
+    if (ParseUnitAddressHexList (OfwNode[FirstNonBridge].UnitAddress,
+          BridgeDevFun, &NumEntries) != RETURN_SUCCESS) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    BridgesFreeBytes = sizeof Bridges - BridgesLen * sizeof Bridges[0];
+    Written = UnicodeSPrintAsciiFormat (Bridges + BridgesLen, BridgesFreeBytes,
+                "/Pci(0x%Lx,0x%Lx)", BridgeDevFun[0], BridgeDevFun[1]);
+    BridgesLen += Written;
+
+    //
+    // There's no way to differentiate between "completely used up without
+    // truncation" and "truncated", so treat the former as the latter.
+    //
+    if (BridgesLen + 1 == BRIDGE_TRANSLATION_OUTPUT_SIZE) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    ++FirstNonBridge;
+  } while (FirstNonBridge < NumNodes);
+
+  if (FirstNonBridge == NumNodes) {
+    return RETURN_UNSUPPORTED;
+  }
+
+  //
+  // Parse the OFW nodes starting with the first non-bridge node.
+  //
+  PciDevFun[1] = 0;
+  NumEntries = ARRAY_SIZE (PciDevFun);
+  if (ParseUnitAddressHexList (
+        OfwNode[FirstNonBridge].UnitAddress,
+        PciDevFun,
+        &NumEntries
+        ) != RETURN_SUCCESS
+      ) {
+    return RETURN_UNSUPPORTED;
+  }
+
+  if (NumNodes >= FirstNonBridge + 3 &&
+      SubstringEq (OfwNode[FirstNonBridge + 0].DriverName, "ide") &&
+      SubstringEq (OfwNode[FirstNonBridge + 1].DriverName, "drive") &&
+      SubstringEq (OfwNode[FirstNonBridge + 2].DriverName, "disk")
+      ) {
+    //
+    // OpenFirmware device path (IDE disk, IDE CD-ROM):
+    //
+    //   /pci@i0cf8/ide@1,1/drive@0/disk@0
+    //        ^         ^ ^       ^      ^
+    //        |         | |       |      master or slave
+    //        |         | |       primary or secondary
+    //        |         PCI slot & function holding IDE controller
+    //        PCI root at system bus port, PIO
+    //
+    // Legacy device path:
+    //
+    //   BBS(Primary Master)                                          
+    //
+    UINT64 Secondary;
+    UINT64 Slave;
+
+    NumEntries = 1;
+    if (ParseUnitAddressHexList (
+          OfwNode[FirstNonBridge + 1].UnitAddress,
+          &Secondary,
+          &NumEntries
+          ) != RETURN_SUCCESS ||
+        Secondary > 1 ||
+        ParseUnitAddressHexList (
+          OfwNode[FirstNonBridge + 2].UnitAddress,
+          &Slave,
+          &NumEntries // reuse after previous single-element call
+          ) != RETURN_SUCCESS ||
+        Slave > 1
+        ) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    Written = UnicodeSPrintAsciiFormat (
+      Translated,
+      *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
+      "BBS(%a %a)",
+      Secondary ? "Secondary" : "Primary",
+      Slave ? "Slave" : "Master"
+      ); 
+  } else if (NumNodes >= FirstNonBridge + 2 &&
+             SubstringEq (OfwNode[FirstNonBridge + 0].DriverName, "scsi") &&
+             SubstringEq (OfwNode[FirstNonBridge + 1].DriverName, "disk")
+             ) {
+    //
+    // OpenFirmware device path (virtio-blk disk):
+    //
+    //   /pci@i0cf8/scsi@6[,3]/disk@0,0
+    //        ^          ^  ^       ^ ^
+    //        |          |  |       fixed
+    //        |          |  PCI function corresponding to disk (optional)
+    //        |          PCI slot holding disk
+    //        PCI root at system bus port, PIO
+    //
+    // Legacy device path prefix:
+    //
+    //   BBS(0x0/0x6/0x0) -- if PCI function is 0 or absent
+    //   BBS(0x0/0x6/0x3) -- if PCI function is present and nonzero
+    //
+    Written = UnicodeSPrintAsciiFormat (
+      Translated,
+      *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
+      "BBS(Harddisk/0x%x/0x%Lx/0x%Lx)",
+      PciRoot,
+      PciDevFun[0],
+      PciDevFun[1]
+      );
+  } 
+
+  //
+  // There's no way to differentiate between "completely used up without
+  // truncation" and "truncated", so treat the former as the latter, and return
+  // success only for "some room left unused".
+  //
+  if (Written + 1 < *TranslatedSize) {
+    *TranslatedSize = Written;
+    return RETURN_SUCCESS;
+  }
+
+  return RETURN_BUFFER_TOO_SMALL;
+}
 
 /**
 
@@ -1295,8 +1512,13 @@ TranslateOfwNodes (
   Status = RETURN_UNSUPPORTED;
 
   if (FeaturePcdGet (PcdQemuBootOrderPciTranslation)) {
-    Status = TranslatePciOfwNodes (OfwNode, NumNodes, ExtraPciRoots,
+    if (!PcdGetBool (PcdQemuEnableCsm)) {
+        Status = TranslatePciOfwNodes (OfwNode, NumNodes, ExtraPciRoots,
                Translated, TranslatedSize);
+    } else {
+        Status = TranslatePciOfwNodesLegacy (OfwNode, NumNodes, ExtraPciRoots,
+               Translated, TranslatedSize);
+    }
   }
   if (Status == RETURN_UNSUPPORTED &&
       FeaturePcdGet (PcdQemuBootOrderMmioTranslation)) {

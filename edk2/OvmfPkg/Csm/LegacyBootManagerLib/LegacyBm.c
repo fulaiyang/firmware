@@ -185,12 +185,16 @@ LegacyBmBuildLegacyDevNameString (
   //
   // BbsTable 16 entries are for onboard IDE.
   // Set description string for SATA harddisks, Harddisk 0 ~ Harddisk 11
+  // index>16 is virtio blk or others
   //
   if (Index >= 5 && Index <= 16 && (CurBBSEntry->DeviceType == BBS_HARDDISK || CurBBSEntry->DeviceType == BBS_CDROM)) {
     Fmt = L"%s %d";
     UnicodeSPrint (BootString, BufSize, Fmt, Type, Index - 5);
-  } else {
+  } else if (Index >= 1 && Index <= 4) {
     UnicodeSPrint (BootString, BufSize, Fmt, Type);
+  } else {
+    Fmt = L"%s/0x%x/0x%x/0x%x";
+    UnicodeSPrint (BootString, BufSize, Fmt, Type,CurBBSEntry->Bus,CurBBSEntry->Device,CurBBSEntry->Function);
   }
 }
 
