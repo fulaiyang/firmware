@@ -287,7 +287,7 @@ static void ich9_smbus_setup(struct pci_device *dev, void *arg)
     ich9_smbus_enable(dev->bdf);
 }
 
-static void intel_igd_setup(struct pci_device *dev, void *arg)
+void intel_igd_setup(struct pci_device *dev, void *arg)
 {
     struct romfile_s *opregion = romfile_find("etc/igd-opregion");
     u64 bdsm_size = le64_to_cpu(romfile_loadint("etc/igd-bdsm-size", 0));
