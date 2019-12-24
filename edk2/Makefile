@@ -10,6 +10,11 @@ JOBS := $(shell grep -c ^processor /proc/cpuinfo 2>/dev/null)
 ifeq ($(JOBS),)
 JOBS := 1
 endif
+ifeq ($(CSM),ENABLE)
+CSM_CON := CSM_ENABLE
+else
+CSM_CON := NULL
+endif
 
 all: ovmf
 edk_basetool:
@@ -22,6 +27,7 @@ ovmf: edk_basetool
        -a X64 \
        -D FD_SIZE_2MB \
        -D DEBUG_ON_SERIAL_PORT \
+       -D $(CSM_CON) \
        -n $(JOBS) \
        -b $(BUILDTARGET)
 clean:
