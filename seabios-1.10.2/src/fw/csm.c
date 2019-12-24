@@ -25,6 +25,7 @@
 #define UINT16 u16
 #define UINT32 u32
 #include "std/LegacyBios.h"
+extern void intel_igd_setup(struct pci_device *dev, void *arg);
 
 struct rsdp_descriptor csm_rsdp VARFSEG __aligned(16);
 
@@ -134,6 +135,17 @@ handle_csm_0001(struct bregs *regs)
     regs->ax = 0;
 }
 
+static void
+pci_init_igd_device(void)
+{
+    struct pci_device *pci;
+    foreachpci(pci) {
+        if ((pci->vendor == PCI_VENDOR_ID_INTEL) && (pci->class == PCI_CLASS_DISPLAY_VGA)) {
+            intel_igd_setup(pci, NULL);
+        }
+    }
+}
+
 /* PrepareToBoot */
 static void
 handle_csm_0002(struct bregs *regs)
@@ -176,6 +188,9 @@ handle_csm_0002(struct bregs *regs)
         copy_smbios((void *)csm_boot_table->SmbiosTable);
 
     // MPTABLE is just there; we don't care where.
+
+    // init igd
+    pci_init_igd_device();
 
     // EFI may have reinitialised the video using its *own* driver.
     enable_vga_console();
