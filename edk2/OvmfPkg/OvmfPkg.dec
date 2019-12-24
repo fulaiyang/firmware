@@ -256,6 +256,7 @@
   #
   #  This PCD is only accessed if PcdSmmSmramRequire is TRUE (see below).
   gUefiOvmfPkgTokenSpaceGuid.PcdQ35TsegMbytes|8|UINT16|0x20
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm|FALSE|BOOLEAN|0x40
 
 [PcdsFeatureFlag]
   gUefiOvmfPkgTokenSpaceGuid.PcdQemuBootOrderPciTranslation|TRUE|BOOLEAN|0x1c

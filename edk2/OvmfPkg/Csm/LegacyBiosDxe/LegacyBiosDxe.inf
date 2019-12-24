@@ -121,6 +121,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdHighPmmMemorySize            ## CONSUMES
   gUefiOvmfPkgTokenSpaceGuid.PcdOpromReservedMemoryBase      ## CONSUMES
   gUefiOvmfPkgTokenSpaceGuid.PcdOpromReservedMemorySize      ## CONSUMES
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm
 
 [Depex]
   gEfiLegacyRegion2ProtocolGuid AND gEfiLegacyInterruptProtocolGuid AND gEfiLegacyBiosPlatformProtocolGuid AND gEfiLegacy8259ProtocolGuid AND gEfiGenericMemTestProtocolGuid AND gEfiCpuArchProtocolGuid AND gEfiTimerArchProtocolGuid AND gEfiVariableWriteArchProtocolGuid

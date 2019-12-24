@@ -64,3 +64,4 @@
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId
   gEfiMdeModulePkgTokenSpaceGuid.PcdNullPointerDetectionPropertyMask
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm

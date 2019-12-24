@@ -346,6 +346,27 @@ GetFirstNonAddress (
   UINTN                FwCfgSize;
   UINT64               HotPlugMemoryEnd;
   RETURN_STATUS        PcdStatus;
+  UINT8                FwcfgCsm;
+
+  //
+  //read the csm switch data,data is ascii,data is 0x30,then go on
+  //
+  FwcfgCsm = 0x30;
+
+  Status = QemuFwCfgFindFile ("opt/ovmf/csm", &FwCfgItem, &FwCfgSize);
+
+  if(Status == RETURN_SUCCESS) {
+      QemuFwCfgSelectItem (FwCfgItem);
+      FwcfgCsm = QemuFwCfgRead8();
+  }
+
+  if (FwcfgCsm != 0x30) {
+      DEBUG((EFI_D_INFO, "Csm mode is turn on by qemu, set PcdPciMmio64Size = 0, PcdQemuEnableCsm = TRUE\n"));
+      PcdStatus = PcdSet64S (PcdPciMmio64Size, 0);
+      ASSERT_RETURN_ERROR (PcdStatus);
+      PcdStatus = PcdSetBoolS (PcdQemuEnableCsm, TRUE);
+      ASSERT_RETURN_ERROR (PcdStatus);
+  }
 
   //
   // set FirstNonAddress to suppress incorrect compiler/analyzer warnings

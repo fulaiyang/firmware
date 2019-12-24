@@ -3264,6 +3264,14 @@ BiosVideoEntryPoint(
   EFI_STATUS  Status;
 
   //
+  //read the csm vars 
+  //  
+  if (!PcdGetBool (PcdQemuEnableCsm)) {
+      DEBUG((EFI_D_INFO, "Legacy video is turn off by QEMU\n"));
+      return EFI_UNSUPPORTED;
+  }
+
+  //
   // Install driver model protocol(s).
   //
   Status = EfiLibInstallDriverBindingComponentName2 (

@@ -73,6 +73,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdBiosVideoCheckVgaEnable                       ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution                 ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution                   ## SOMETIMES_CONSUMES
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm
 
 [UserExtensions.TianoCore."ExtraFiles"]
   BiosVideoDxeExtra.uni

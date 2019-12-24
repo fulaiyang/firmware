@@ -992,6 +992,14 @@ InitializeQemuVideo (
 {
   EFI_STATUS              Status;
 
+  //
+  //read the csm vars 
+  //  
+  if (PcdGetBool (PcdQemuEnableCsm)) {
+      DEBUG((EFI_D_INFO, "Qemu Csm mode is on, Qemu video no support\n"));
+      return EFI_UNSUPPORTED;
+  }
+
   Status = EfiLibInstallDriverBindingComponentName2 (
              ImageHandle,
              SystemTable,

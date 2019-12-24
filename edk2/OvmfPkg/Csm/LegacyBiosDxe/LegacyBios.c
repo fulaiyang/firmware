@@ -837,6 +837,14 @@ LegacyBiosInstall (
   UINT8                              *SecureBoot;
   EFI_EVENT                          InstallSmbiosEvent;
   EFI_EVENT                          EndOfDxeEvent;
+ 
+  //
+  //read the csm vars 
+  //
+  if (!PcdGetBool (PcdQemuEnableCsm)) {
+      DEBUG((EFI_D_INFO, "CSM mode is turn off by QEMU\n"));
+      return EFI_UNSUPPORTED;
+  }
 
   //
   // Load this driver's image to memory

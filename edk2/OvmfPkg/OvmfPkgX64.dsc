@@ -549,6 +549,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Base|0x0
 !ifdef $(CSM_ENABLE)
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size|0x0
+  gUefiOvmfPkgTokenSpaceGuid.PcdQemuEnableCsm|FALSE
 !else
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size|0x800000000
 !endif
@@ -755,9 +756,7 @@
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
   MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 
-!ifndef $(CSM_ENABLE)
   OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf
-!endif
   OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf
   OvmfPkg/VirtioGpuDxe/VirtioGpu.inf
 
