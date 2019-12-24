@@ -56,7 +56,7 @@ install:
 clean:
 	@rm -rf ${BUILD_DIR} ${ROOTFS}
 	@cd ${EDK_DIR} && $(MAKE) clean
-	rm CSM_BIN
+	rm $(CSM_BIN)
 	-rm -rf ${FIRMWARE_ROOT}/debug/Build ${FIRMWARE_ROOT}/debug/*.log
     
 .PHONY: all clean install ovmf seabios ovmf_csm
