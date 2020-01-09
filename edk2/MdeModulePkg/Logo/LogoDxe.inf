@@ -36,11 +36,13 @@
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   DebugLib
+  QemuFwCfgLib
 
 [Protocols]
   gEfiHiiDatabaseProtocolGuid        ## CONSUMES

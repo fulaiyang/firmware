@@ -1843,7 +1843,7 @@ EfiBootManagerBoot (
     if (FileBuffer != NULL) {
       RamDiskDevicePath = BmGetRamDiskDevicePath (FilePath);
 
-      REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderLoad));
+      //REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderLoad));//fix by yangfulai@ruijie.com.cn
       Status = gBS->LoadImage (
                       TRUE,
                       gImageHandle,
@@ -1945,7 +1945,7 @@ EfiBootManagerBoot (
     BmEndOfBdsPerfCode (NULL, NULL);
   );
 
-  REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderStart));
+  //REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderStart));//fix by yangfulai@ruijie.com.cn
 
   Status = gBS->StartImage (ImageHandle, &BootOption->ExitDataSize, &BootOption->ExitData);
   DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Image Return Status = %r\n", Status));

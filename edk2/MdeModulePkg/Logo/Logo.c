@@ -13,6 +13,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/HiiPackageList.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
+#include <Library/QemuFwCfgLib.h>
 
 typedef struct {
   EFI_IMAGE_ID                          ImageId;
@@ -101,6 +102,24 @@ InitializeLogo (
   EFI_HII_PACKAGE_LIST_HEADER *PackageList;
   EFI_HII_DATABASE_PROTOCOL   *HiiDatabase;
   EFI_HANDLE                  Handle;
+  FIRMWARE_CONFIG_ITEM        FwCfgItem;
+  UINTN                       FwCfgSize;
+  UINT8                       FwcfgCsm;
+
+  FwcfgCsm = 0x30;
+  Status = QemuFwCfgFindFile ("opt/ovmf/disablelogo", &FwCfgItem, &FwCfgSize);
+
+  if(Status == RETURN_SUCCESS) {
+      QemuFwCfgSelectItem (FwCfgItem);
+      FwcfgCsm = QemuFwCfgRead8();
+      //
+      //uninitialize logo function
+      //
+      if(FwcfgCsm != 0x30) {
+          DEBUG ((EFI_D_INFO, "InitializeLogo: qemu disable logo function by fw_cfg\n"));
+          return EFI_UNSUPPORTED;
+      }
+  }
 
   Status = gBS->LocateProtocol (
                   &gEfiHiiDatabaseProtocolGuid,
