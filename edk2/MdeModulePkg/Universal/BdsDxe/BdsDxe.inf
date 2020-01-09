@@ -37,6 +37,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   DevicePathLib
@@ -53,6 +54,7 @@
   PlatformBootManagerLib
   PcdLib
   PrintLib
+  QemuFwCfgLib
 
 [Guids]
   gEfiGlobalVariableGuid                        ## SOMETIMES_PRODUCES ## Variable:L"BootNext" (The number of next boot option)

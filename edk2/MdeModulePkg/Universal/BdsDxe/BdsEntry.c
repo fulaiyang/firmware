@@ -648,6 +648,46 @@ BdsFormalizeEfiGlobalVariable (
 }
 
 /**
+  Attempt to write a key to TextIn device.
+
+  @param BootOptions       Input boot option array.
+  @param Key               Input scancode key.
+**/
+VOID
+WriteKeyInside (
+  IN EFI_BOOT_MANAGER_LOAD_OPTION    *LoadOptions,
+  IN UINT8 key
+  )
+{
+  EFI_STATUS               Status;
+  FIRMWARE_CONFIG_ITEM     FwCfgItem;
+  UINTN                    FwCfgSize;
+  UINT8                    FwcfgCsm;
+
+  if (!StrStr(LoadOptions->Description, L"ROM")) {
+      return;
+  }
+  
+  //
+  //read the qemu firmware switch data,data is ascii,data is 0x30,then return 
+  //
+  FwcfgCsm = 0x30;
+  Status = QemuFwCfgFindFile ("opt/ovmf/writekey", &FwCfgItem, &FwCfgSize);
+
+  if(Status == RETURN_SUCCESS) {
+      QemuFwCfgSelectItem (FwCfgItem);
+      FwcfgCsm = QemuFwCfgRead8();
+  }
+
+  //
+  //scancode 0x22="g",ps2keyboard set1; refer to struct var "ConvertKeyboardScanCode"
+  //
+  if(FwcfgCsm != 0x30) {
+      gST->ConIn->WriteKeyToBuf (gST->ConIn, key);
+  }
+}
+
+/**
 
   Service routine for BdsInstance->Entry(). Devices are connected, the
   consoles are initialized, and the boot options are tried.
@@ -1059,6 +1099,10 @@ BdsEntry (
       // Retry to boot if any of the boot succeeds
       //
       LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionTypeBoot);
+      //
+      //scancode 0x22="g",ps2keyboard set1; refer to struct var "ConvertKeyboardScanCode"
+      //
+      WriteKeyInside (LoadOptions, 0x22);
       BootSuccess = BootBootOptions (LoadOptions, LoadOptionCount, (BootManagerMenuStatus != EFI_NOT_FOUND) ? &BootManagerMenu : NULL);
       EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
     } while (BootSuccess);

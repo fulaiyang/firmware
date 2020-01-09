@@ -1287,6 +1287,12 @@ ConSplitterTextInReadKeyStroke (
   IN  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *This,
   OUT EFI_INPUT_KEY                   *Key
   );
+EFI_STATUS
+EFIAPI
+ConSplitterTextInWriteKeyToBuf (
+  IN  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *This,
+  IN  UINT8                           KeyScancode
+  );
 
 /**
   Add Text Input Ex Device in Consplitter Text Input Ex list.

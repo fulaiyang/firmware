@@ -108,6 +108,12 @@ EFI_STATUS
   IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
   OUT EFI_INPUT_KEY                       *Key
   );
+typedef
+EFI_STATUS
+(EFIAPI *EFI_INPUT_WRITE_KEY)(
+  IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
+  IN UINT8                                KeyScancode
+  );
 
 ///
 /// The EFI_SIMPLE_TEXT_INPUT_PROTOCOL is used on the ConsoleIn device.
@@ -120,6 +126,10 @@ struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL {
   /// Event to use with WaitForEvent() to wait for a key to be available
   ///
   EFI_EVENT           WaitForKey;
+  ///
+  ///write a key value to input device buffer
+  ///
+  EFI_INPUT_WRITE_KEY WriteKeyToBuf;
 };
 
 extern EFI_GUID gEfiSimpleTextInProtocolGuid;
