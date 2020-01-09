@@ -36,6 +36,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <Library/UefiBootManagerLib.h>
 #include <Library/PlatformBootManagerLib.h>
+#include <Library/QemuFwCfgLib.h>
 
 #if !defined (EFI_REMOVABLE_MEDIA_FILE_NAME)
     #if defined (MDE_CPU_EBC)

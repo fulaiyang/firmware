@@ -253,6 +253,7 @@ KbdControllerDriverStart (
   ConsoleIn->Handle                 = Controller;
   (ConsoleIn->ConIn).Reset          = KeyboardEfiReset;
   (ConsoleIn->ConIn).ReadKeyStroke  = KeyboardReadKeyStroke;
+  (ConsoleIn->ConIn).WriteKeyToBuf  = KeyboardWriteKeyToBuf;
   ConsoleIn->DataRegisterAddress    = KEYBOARD_8042_DATA_REGISTER;
   ConsoleIn->StatusRegisterAddress  = KEYBOARD_8042_STATUS_REGISTER;
   ConsoleIn->CommandRegisterAddress = KEYBOARD_8042_COMMAND_REGISTER;

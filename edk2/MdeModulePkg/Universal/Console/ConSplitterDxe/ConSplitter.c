@@ -40,7 +40,8 @@ GLOBAL_REMOVE_IF_UNREFERENCED TEXT_IN_SPLITTER_PRIVATE_DATA  mConIn = {
   {
     ConSplitterTextInReset,
     ConSplitterTextInReadKeyStroke,
-    (EFI_EVENT) NULL
+    (EFI_EVENT) NULL,
+    ConSplitterTextInWriteKeyToBuf
   },
   0,
   (EFI_SIMPLE_TEXT_INPUT_PROTOCOL **) NULL,
@@ -3623,6 +3624,45 @@ ConSplitterTextInReadKeyStroke (
   return ConSplitterTextInPrivateReadKeyStroke (Private, Key);
 }
 
+/**
+    write a key value to key buffer, so some app can active
+    @param This    Pointer to instance of EFI_SIMPLE_TEXT_INPUT_PROTOCOL
+    @param KeyScancode           key scancode value
+
+
+    @retval EFI_SUCCESS             The keystroke information was returned.
+    @retval EFI_NOT_READY           There was no keystroke data availiable.
+    @retval EFI_DEVICE_ERROR        The keystroke information was not returned due to
+                                    hardware errors.
+    @retval EFI_INVALID_PARAMETER   KeyData is NULL.
+
+**/
+EFI_STATUS
+EFIAPI
+ConSplitterTextInWriteKeyToBuf (
+  IN  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *This,
+  IN  UINT8                           KeyScancode
+  )
+{
+  EFI_STATUS                            Status;
+  TEXT_IN_SPLITTER_PRIVATE_DATA         *Private;
+  UINT8                                 Index;
+
+  Status = EFI_NOT_READY;
+  Private = TEXT_IN_SPLITTER_PRIVATE_DATA_FROM_THIS (This);
+
+  for (Index = 0; Index < Private->CurrentNumberOfConsoles; Index++) {
+      if (Private->TextInList[Index]->WriteKeyToBuf) {
+          Status = Private->TextInList[Index]->WriteKeyToBuf (
+                                          Private->TextInList[Index],
+                                          KeyScancode
+                                          );
+          break;
+      }
+  }
+
+  return Status;
+}
 
 /**
   This event aggregates all the events of the ConIn devices in the spliter.

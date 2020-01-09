@@ -347,6 +347,12 @@ KeyboardReadKeyStroke (
   OUT EFI_INPUT_KEY                   *Key
   );
 
+EFI_STATUS
+EFIAPI
+KeyboardWriteKeyToBuf (
+  IN  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *This,
+  IN  UINT8                           KeyScancode
+  );
 /**
   Event notification function for SIMPLE_TEXT_IN.WaitForKey event
   Signal the event if there is key available
@@ -530,6 +536,11 @@ PushEfikeyBufTail (
   IN  EFI_KEY_DATA          *KeyData
   );
 
+VOID
+PushScancodeBufTail (
+  IN  SCAN_CODE_QUEUE       *Queue,
+  IN  UINT8                 Scancode
+  );
 /**
   Judge whether is a registed key
 

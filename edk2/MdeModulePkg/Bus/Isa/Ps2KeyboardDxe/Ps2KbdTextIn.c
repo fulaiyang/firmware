@@ -168,7 +168,6 @@ KeyboardReadKeyStrokeWorker (
   gBS->RestoreTPL (OldTpl);
   return Status;
 }
-
 /**
   Perform 8042 controller and keyboard initialization which implement SIMPLE_TEXT_IN.Reset()
 
@@ -302,7 +301,38 @@ KeyboardReadKeyStroke (
     return EFI_SUCCESS;
   }
 }
+/**
+    write a key value to key buffer, so some app can active
+    @param This    Pointer to instance of EFI_SIMPLE_TEXT_INPUT_PROTOCOL
+    @param KeyScancode           key scancode value
 
+
+    @retval EFI_SUCCESS             The keystroke information was returned.
+    @retval EFI_NOT_READY           There was no keystroke data availiable.
+    @retval EFI_DEVICE_ERROR        The keystroke information was not returned due to
+                                    hardware errors.
+    @retval EFI_INVALID_PARAMETER   KeyData is NULL.
+
+**/
+EFI_STATUS
+EFIAPI
+KeyboardWriteKeyToBuf (
+  IN  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *This,
+  IN  UINT8                           KeyScancode
+  )
+{
+  EFI_STATUS              Status;
+  KEYBOARD_CONSOLE_IN_DEV *ConsoleIn;
+
+  Status = EFI_SUCCESS;
+  ConsoleIn = KEYBOARD_CONSOLE_IN_DEV_FROM_THIS (This);
+
+  DEBUG ((EFI_D_INFO, "KeyboardWriteKeyToBuf: write scancode 0x%x to Queue\n", KeyScancode));
+  PushScancodeBufTail (&ConsoleIn->ScancodeQueue, KeyScancode);
+  KeyGetchar (ConsoleIn);
+
+  return Status;
+}
 /**
   Event notification function for SIMPLE_TEXT_IN.WaitForKey event
   Signal the event if there is key available
